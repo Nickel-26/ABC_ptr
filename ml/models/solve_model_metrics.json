@@ -1,0 +1,9 @@
+{
+  "model": "lightgbm",
+  "rows": 1000000,
+  "train_rows": 800000,
+  "test_rows": 200000,
+  "accuracy": 0.704335,
+  "log_loss": 0.558080155176191,
+  "roc_auc": 0.780055232933833
+}

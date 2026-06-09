@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String       @id @default(uuid())
+  username         String?      @unique
+  passwordHash     String?
+  cfHandle         String?
+  lcUsername       String?
+  lcSession        String?
+  cfRating         Int?
+  cfMaxRating      Int?
+  cfRank           String?
+  lcTotalSolved    Int?
+  lcEasySolved     Int?
+  lcMediumSolved   Int?
+  lcHardSolved     Int?
+  lastSyncAt       DateTime?
+  submissions      Submission[]
+  notes            ProblemNote[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Problem {
+  id               String       @id @default(uuid())
+  platform         String       // "CODEFORCES", "LEETCODE"
+  problemId        String       // e.g., "1500A" for CF, "two-sum" for LC
+  name             String
+  rating           Int?         // CF Rating
+  difficulty       String?      // LC Difficulty: "Easy", "Medium", "Hard"
+  url              String?
+  popularity       Int?         // Solved count approx
+  tags             ProblemTag[]
+  submissions      Submission[]
+  notes            ProblemNote[]
+  
+  @@unique([platform, problemId])
+}
+
+model Tag {
+  id               String       @id @default(uuid())
+  name             String       @unique
+  problems         ProblemTag[]
+}
+
+model ProblemTag {
+  problemId        String
+  tagId            String
+  problem          Problem      @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tag              Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+}
+
+model Submission {
+  id               String       @id @default(uuid())
+  userId           String
+  problemId        String
+  verdict          String       // "OK", "WRONG_ANSWER", "ACCEPTED", etc.
+  submittedAt      DateTime
+  platform         String       // "CODEFORCES", "LEETCODE"
+  
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem          Problem      @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId, platform, submittedAt])
+}
+
+model ProblemNote {
+  id               String       @id @default(uuid())
+  userId           String
+  problemId        String
+  content          String
+  isBookmarked     Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem          Problem      @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+}
